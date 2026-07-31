@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp package.json /tmp/package.json.bak)",
+      "Bash(cp package-lock.json /tmp/package-lock.json.bak)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ]
+}

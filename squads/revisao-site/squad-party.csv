@@ -1,0 +1,4 @@
+id,name,title,icon,path
+carla-copy,Carla Copy,Redatora de Copy,📝,./agents/carla-copy.agent.md
+diego-design,Diego Design,Designer de Logo,🎨,./agents/diego-design.agent.md
+renata-revisao,Renata Revisão,Revisora de Qualidade,🔍,./agents/renata-revisao.agent.md

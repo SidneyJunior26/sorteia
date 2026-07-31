@@ -1,0 +1,71 @@
+// Prisma schema for "Sistema de Livros"
+// Postgres (Supabase). See README.md for setup instructions.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection, used by `prisma migrate`.
+  // Falls back to DATABASE_URL if DIRECT_URL is not set.
+  directUrl = env("DIRECT_URL")
+}
+
+/// Store enum for affiliate links. Whitelisted at the application
+/// layer too (never trust a raw string from the URL as the store).
+enum Store {
+  AMAZON
+  SHOPEE
+  MERCADO_LIVRE
+}
+
+/// Auto-synced index of books, populated by the Google Books sync
+/// cron job. This is a cache, not a manually curated catalog.
+model Book {
+  id             String   @id @default(cuid())
+  googleBooksId  String   @unique
+  isbn           String?
+  title          String
+  author         String
+  synopsis       String?  @db.Text
+  category       String
+  coverUrl       String?
+  publishedDate  String?
+  source         String   @default("google_books")
+  lastSyncedAt   DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  affiliateLinks AffiliateLink[]
+
+  @@index([category])
+}
+
+/// Categories drive the Google Books search terms used by the sync
+/// job, and populate the category filter dropdown on the frontend.
+model Category {
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique
+  searchTerms String
+
+  @@index([slug])
+}
+
+/// Affiliate link click counters, keyed by (bookId, store). URLs are
+/// never stored here — they're built on demand in /go/[bookId]/[store]
+/// from env-var driven templates, so nothing is hardcoded per book.
+model AffiliateLink {
+  id            String    @id @default(cuid())
+  bookId        String
+  store         Store
+  clicks        Int       @default(0)
+  lastClickedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, store])
+  @@index([bookId])
+}

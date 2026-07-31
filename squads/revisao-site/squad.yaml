@@ -1,0 +1,44 @@
+code: "revisao-site"
+name: "Revisão de Site"
+description: "Propõe nome de marca, revisa a copy e cria conceito de logo para o Sistema de Livros."
+
+skills:
+  - web_search
+  - web_fetch
+  - higgsfield_generate_image
+
+data:
+  - pipeline/data/company-context.md
+
+pipeline:
+  - step: 1
+    name: "Propor nome"
+    agent: "carla-copy"
+    execution: "inline"
+  - step: 2
+    name: "checkpoint-escolher-nome"
+    type: "checkpoint"
+  - step: 3
+    name: "Revisar copy"
+    agent: "carla-copy"
+    execution: "inline"
+  - step: 4
+    name: "Review da copy"
+    agent: "renata-revisao"
+    execution: "inline"
+    on_reject: 3
+  - step: 5
+    name: "checkpoint-aprovar-copy"
+    type: "checkpoint"
+  - step: 6
+    name: "Conceito de logo"
+    agent: "diego-design"
+    execution: "inline"
+  - step: 7
+    name: "Review do logo"
+    agent: "renata-revisao"
+    execution: "inline"
+    on_reject: 6
+  - step: 8
+    name: "checkpoint-aprovar-logo"
+    type: "checkpoint"
