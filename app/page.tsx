@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import BookRandomizer from "@/components/BookRandomizer";
+import TextType from "@/components/TextType";
 import type { CategoryDTO, LanguageDTO } from "@/types/book";
 
 // The category dropdown needs fresh data from the DB (and the DB may
@@ -43,9 +44,17 @@ export default async function HomePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
       <section className="text-center mb-10">
-        <h1 className="text-3xl sm:text-4xl font-bold text-brand-900 mb-3">
-          Não sabe o que ler? Sorteia um livro.
-        </h1>
+        <TextType
+          as="h1"
+          className="text-3xl sm:text-4xl font-bold text-brand-900 mb-3"
+          text="Não sabe o que ler? Sorteia um livro."
+          typingSpeed={45}
+          initialDelay={200}
+          loop={false}
+          showCursor
+          hideCursorWhileTyping={false}
+          cursorCharacter="|"
+        />
         <p className="text-gray-600 max-w-xl mx-auto">
           Clique em &quot;Sortear livro&quot; pra receber uma sugestão
           aleatória do catálogo, ou escolha a categoria e a quantidade antes
