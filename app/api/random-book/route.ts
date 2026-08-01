@@ -15,10 +15,6 @@ const querySchema = z.object({
     .optional(),
   exclude: z.string().trim().cuid().optional(),
   count: z.coerce.number().int().min(1).max(3).optional().default(1),
-  language: z
-    .array(z.string().trim().max(10).regex(/^[a-zA-Z-]+$/, "Idioma inválido"))
-    .max(20)
-    .optional(),
 });
 
 interface RandomBookRow {
@@ -54,7 +50,6 @@ export async function GET(request: NextRequest) {
     category: searchParams.get("category") ?? undefined,
     exclude: searchParams.get("exclude") ?? undefined,
     count: searchParams.get("count") ?? undefined,
-    language: searchParams.getAll("language").length > 0 ? searchParams.getAll("language") : undefined,
   });
 
   if (!parsed.success) {
@@ -64,7 +59,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { category: categorySlug, exclude, count, language } = parsed.data;
+  const { category: categorySlug, exclude, count } = parsed.data;
   const applyExclude = count === 1 ? exclude : undefined;
 
   let categoryName: string | null = null;
@@ -84,9 +79,6 @@ export async function GET(request: NextRequest) {
   if (categoryName) {
     conditions.push(Prisma.sql`category = ${categoryName}`);
   }
-  if (language && language.length > 0) {
-    conditions.push(Prisma.sql`language IN (${Prisma.join(language)})`);
-  }
   if (applyExclude) {
     conditions.push(Prisma.sql`id != ${applyExclude}`);
   }
@@ -101,11 +93,7 @@ export async function GET(request: NextRequest) {
   // If excluding the last-shown book left zero candidates (e.g. only
   // one book in that category), retry once without the exclusion.
   if (rows.length === 0 && applyExclude) {
-    const retryConditions: Prisma.Sql[] = [];
-    if (categoryName) retryConditions.push(Prisma.sql`category = ${categoryName}`);
-    if (language && language.length > 0) retryConditions.push(Prisma.sql`language IN (${Prisma.join(language)})`);
-    const retryWhere =
-      retryConditions.length > 0 ? Prisma.sql`WHERE ${Prisma.join(retryConditions, " AND ")}` : Prisma.empty;
+    const retryWhere = categoryName ? Prisma.sql`WHERE category = ${categoryName}` : Prisma.empty;
 
     rows = await prisma.$queryRaw<RandomBookRow[]>(
       Prisma.sql`SELECT * FROM "Book" ${retryWhere} ORDER BY random() LIMIT ${count}`

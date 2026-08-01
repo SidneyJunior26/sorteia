@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import BookRandomizer from "@/components/BookRandomizer";
 import TextType from "@/components/TextType";
-import type { CategoryDTO, LanguageDTO } from "@/types/book";
+import type { CategoryDTO } from "@/types/book";
 
 // The category dropdown needs fresh data from the DB (and the DB may
 // not even be reachable at build time before Supabase is configured),
@@ -10,36 +10,27 @@ export const dynamic = "force-dynamic";
 
 async function getCategories(): Promise<CategoryDTO[]> {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, slug: true },
-    });
-    return categories;
+    const [categories, nonEmpty] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, slug: true },
+      }),
+      prisma.book.groupBy({ by: ["category"] }),
+    ]);
+
+    // A category with no synced books yet would just be a dead-end
+    // filter option (0 results on every draw), so it's hidden from the
+    // dropdown until the sync job actually populates it.
+    const namesWithBooks = new Set(nonEmpty.map((b) => b.category));
+    return categories.filter((c) => namesWithBooks.has(c.name));
   } catch (error) {
     console.error("[home] Falha ao carregar categorias:", error);
     return [];
   }
 }
 
-async function getLanguages(): Promise<LanguageDTO[]> {
-  try {
-    const groups = await prisma.book.groupBy({
-      by: ["language"],
-      where: { language: { not: null } },
-      _count: { _all: true },
-      orderBy: { _count: { language: "desc" } },
-    });
-    return groups
-      .filter((g) => g.language)
-      .map((g) => ({ code: g.language as string, count: g._count._all }));
-  } catch (error) {
-    console.error("[home] Falha ao carregar idiomas:", error);
-    return [];
-  }
-}
-
 export default async function HomePage() {
-  const [categories, languages] = await Promise.all([getCategories(), getLanguages()]);
+  const categories = await getCategories();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
@@ -62,7 +53,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <BookRandomizer categories={categories} languages={languages} />
+      <BookRandomizer categories={categories} />
     </div>
   );
 }

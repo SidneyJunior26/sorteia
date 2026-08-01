@@ -91,9 +91,13 @@ async function fetchPage(query: string, startIndex: number, maxResults: number):
     q: query,
     startIndex: String(startIndex),
     maxResults: String(maxResults),
-    langRestrict: "pt",
     printType: "books",
   });
+  // Note: the API's `langRestrict` param is unreliable in practice —
+  // tested empirically to still return mostly/only English results
+  // even with langRestrict=pt on plain Portuguese queries. Language
+  // targeting is done via query text instead (see lib/sync.ts) and
+  // verified post-fetch against each item's actual `language` field.
 
   const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
   if (apiKey) {
@@ -119,9 +123,9 @@ async function fetchPage(query: string, startIndex: number, maxResults: number):
  * query, paginating a few pages. Individual malformed items (missing
  * title, etc.) are skipped rather than failing the whole batch.
  */
-export async function fetchBooksForQuery(query: string, targetCount = 30): Promise<NormalizedBook[]> {
-  const pageSize = 20;
-  const maxPages = 3; // up to ~60 raw results fetched, enough to yield ~20-30 valid ones
+export async function fetchBooksForQuery(query: string, targetCount = 80): Promise<NormalizedBook[]> {
+  const pageSize = 40; // Google Books API's max maxResults per request
+  const maxPages = 5; // up to ~200 raw results fetched per category
   const results = new Map<string, NormalizedBook>();
 
   for (let page = 0; page < maxPages && results.size < targetCount; page++) {

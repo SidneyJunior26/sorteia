@@ -20,8 +20,3 @@ export interface CategoryDTO {
   name: string;
   slug: string;
 }
-
-export interface LanguageDTO {
-  code: string;
-  count: number;
-}

@@ -102,7 +102,7 @@ const categories = [
   {
     name: "Jovens e Adolescentes",
     slug: "jovens-e-adolescentes",
-    searchTerms: "jovens adolescentes young adult",
+    searchTerms: "jovens adolescentes literatura juvenil",
   },
   {
     name: "LGBTQ+",
