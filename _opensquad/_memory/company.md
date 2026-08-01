@@ -1,6 +1,6 @@
 # Perfil da Empresa/Projeto
 
-- **Nome:** Sistema de Livros
+- **Nome:** Achei Meu Livro
 - **Setor:** Recomendação/descoberta de livros (afiliado)
 - **URL:** http://localhost:3000 (em desenvolvimento, ainda não publicado)
 - **Descrição:** Site onde o usuário clica em "Sortear livro" e recebe uma sugestão aleatória do catálogo (com filtro opcional por categoria e quantidade de 1 a 3 livros). Cada resultado mostra capa, título, autor, sinopse e um botão de compra na Amazon com link de afiliado.
