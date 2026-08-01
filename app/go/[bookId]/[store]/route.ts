@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   const book = await prisma.book.findUnique({
     where: { id: bookId },
-    select: { id: true, title: true, author: true },
+    select: { id: true, title: true, author: true, isbn: true },
   });
 
   if (!book) {

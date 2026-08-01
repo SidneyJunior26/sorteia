@@ -3,6 +3,7 @@ import { Store } from "@prisma/client";
 interface BookForLink {
   title: string;
   author: string;
+  isbn?: string | null;
 }
 
 /**
@@ -23,13 +24,17 @@ function searchQuery(book: BookForLink): string {
  * If AMAZON_ASSOC_TAG isn't set yet, we return the same search link
  * without the `tag` param: still a valid, working link, just without
  * commission tracking.
+ *
+ * Searching by ISBN (when we have one) is far more precise than
+ * title+author free text — it either finds the exact edition or
+ * returns nothing, instead of surfacing an unrelated "closest match".
  */
 export function getAmazonLink(book: BookForLink): string {
   const tag = process.env.AMAZON_ASSOC_TAG;
 
   const url = new URL("https://www.amazon.com.br/s");
   // URLSearchParams handles URL-encoding for us.
-  url.searchParams.set("k", searchQuery(book));
+  url.searchParams.set("k", book.isbn || searchQuery(book));
   if (tag) {
     url.searchParams.set("tag", tag);
   }

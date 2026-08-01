@@ -32,6 +32,8 @@ model Book {
   synopsis       String?  @db.Text
   category       String
   language       String?
+  ratingsCount   Int      @default(0)
+  averageRating  Float?
   coverUrl       String?
   publishedDate  String?
   source         String   @default("google_books")

@@ -72,7 +72,7 @@ const categories = [
   {
     name: "Esportes e Lazer",
     slug: "esportes-e-lazer",
-    searchTerms: "esportes lazer subject:sports-recreation",
+    searchTerms: "esportes lazer",
   },
   {
     name: "Fantasia, Horror e Ficção Científica",
@@ -127,7 +127,7 @@ const categories = [
   {
     name: "Policial, Suspense e Mistério",
     slug: "policial-suspense-misterio",
-    searchTerms: "policial suspense mistério subject:mystery-detective-fiction",
+    searchTerms: "policial suspense mistério",
   },
   {
     name: "Política, Filosofia e Ciências Sociais",

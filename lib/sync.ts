@@ -6,6 +6,7 @@ export interface CategorySyncResult {
   slug: string;
   fetched: number;
   upserted: number;
+  skippedObscure: number;
   error: string | null;
 }
 
@@ -21,6 +22,7 @@ async function syncCategory(category: { name: string; slug: string; searchTerms:
     slug: category.slug,
     fetched: 0,
     upserted: 0,
+    skippedObscure: 0,
     error: null,
   };
 
@@ -29,6 +31,16 @@ async function syncCategory(category: { name: string; slug: string; searchTerms:
     result.fetched = books.length;
 
     for (const book of books) {
+      // Skip books with no ISBN at all — a much stronger signal of an
+      // obscure/incomplete edition than Google's ratingsCount, which is
+      // almost always empty even for well-known titles (tested against
+      // "Dom Casmurro" itself: no ratingsCount). No ISBN means no clean
+      // way to find this exact edition on Amazon either.
+      if (!book.isbn) {
+        result.skippedObscure += 1;
+        continue;
+      }
+
       try {
         await prisma.book.upsert({
           where: { googleBooksId: book.googleBooksId },
@@ -39,6 +51,8 @@ async function syncCategory(category: { name: string; slug: string; searchTerms:
             synopsis: book.synopsis,
             category: category.name,
             language: book.language,
+            ratingsCount: book.ratingsCount,
+            averageRating: book.averageRating,
             coverUrl: book.coverUrl,
             publishedDate: book.publishedDate,
             source: "google_books",
@@ -52,6 +66,8 @@ async function syncCategory(category: { name: string; slug: string; searchTerms:
             synopsis: book.synopsis,
             category: category.name,
             language: book.language,
+            ratingsCount: book.ratingsCount,
+            averageRating: book.averageRating,
             coverUrl: book.coverUrl,
             publishedDate: book.publishedDate,
             source: "google_books",
