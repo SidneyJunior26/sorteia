@@ -31,7 +31,7 @@ export default async function HomePage() {
         </h1>
         <p className="text-gray-600 max-w-xl mx-auto">
           Clique em &quot;Sortear livro&quot; pra receber uma sugestão
-          aleatória do catálogo, ou escolhe a categoria e a quantidade antes
+          aleatória do catálogo, ou escolha a categoria e a quantidade antes
           de sortear.
         </p>
       </section>

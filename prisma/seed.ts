@@ -22,12 +22,12 @@ const categories = [
   {
     name: "Artesanato, Casa e Estilo de Vida",
     slug: "artesanato-casa-estilo-de-vida",
-    searchTerms: "artesanato decoração casa subject:crafts-hobbies",
+    searchTerms: "artesanato decoração casa",
   },
   {
     name: "Autoajuda",
     slug: "autoajuda",
-    searchTerms: "autoajuda desenvolvimento pessoal subject:self-help",
+    searchTerms: "autoajuda desenvolvimento pessoal",
   },
   {
     name: "Biografias e Histórias Reais",
@@ -92,17 +92,17 @@ const categories = [
   {
     name: "HQs, Mangás e Graphic Novels",
     slug: "hqs-mangas-graphic-novels",
-    searchTerms: "quadrinhos mangá graphic novel subject:comics-graphic-novels",
+    searchTerms: "quadrinhos mangá graphic novel",
   },
   {
     name: "Infantil",
     slug: "infantil",
-    searchTerms: "infantil subject:juvenile-fiction",
+    searchTerms: "livro infantil crianças",
   },
   {
     name: "Jovens e Adolescentes",
     slug: "jovens-e-adolescentes",
-    searchTerms: "jovens adolescentes young adult subject:young-adult-fiction",
+    searchTerms: "jovens adolescentes young adult",
   },
   {
     name: "LGBTQ+",
@@ -137,7 +137,7 @@ const categories = [
   {
     name: "Religião e espiritualidade",
     slug: "religiao-e-espiritualidade",
-    searchTerms: "religião espiritualidade subject:body-mind-spirit",
+    searchTerms: "religião espiritualidade",
   },
   {
     name: "Romance",
@@ -147,7 +147,7 @@ const categories = [
   {
     name: "Saúde e Família",
     slug: "saude-e-familia",
-    searchTerms: "saúde família bem-estar subject:health-fitness",
+    searchTerms: "saúde família bem-estar",
   },
   {
     name: "Turismo e Guias de Viagem",
