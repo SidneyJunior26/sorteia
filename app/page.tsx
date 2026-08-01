@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import BookRandomizer from "@/components/BookRandomizer";
-import type { CategoryDTO } from "@/types/book";
+import type { CategoryDTO, LanguageDTO } from "@/types/book";
 
 // The category dropdown needs fresh data from the DB (and the DB may
 // not even be reachable at build time before Supabase is configured),
@@ -20,8 +20,25 @@ async function getCategories(): Promise<CategoryDTO[]> {
   }
 }
 
+async function getLanguages(): Promise<LanguageDTO[]> {
+  try {
+    const groups = await prisma.book.groupBy({
+      by: ["language"],
+      where: { language: { not: null } },
+      _count: { _all: true },
+      orderBy: { _count: { language: "desc" } },
+    });
+    return groups
+      .filter((g) => g.language)
+      .map((g) => ({ code: g.language as string, count: g._count._all }));
+  } catch (error) {
+    console.error("[home] Falha ao carregar idiomas:", error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const categories = await getCategories();
+  const [categories, languages] = await Promise.all([getCategories(), getLanguages()]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
@@ -36,7 +53,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <BookRandomizer categories={categories} />
+      <BookRandomizer categories={categories} languages={languages} />
     </div>
   );
 }

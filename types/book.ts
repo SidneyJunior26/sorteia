@@ -7,6 +7,7 @@ export interface BookDTO {
   author: string;
   synopsis: string | null;
   category: string;
+  language: string | null;
   coverUrl: string | null;
   publishedDate: string | null;
   source: string;
@@ -18,4 +19,9 @@ export interface CategoryDTO {
   id: string;
   name: string;
   slug: string;
+}
+
+export interface LanguageDTO {
+  code: string;
+  count: number;
 }

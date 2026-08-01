@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import BookResult from "./BookResult";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,16 +12,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { BookDTO, CategoryDTO } from "@/types/book";
+import type { BookDTO, CategoryDTO, LanguageDTO } from "@/types/book";
 
 interface BookRandomizerProps {
   categories: CategoryDTO[];
+  languages: LanguageDTO[];
 }
 
 const ALL_CATEGORIES = "__all__";
 const QUANTITY_OPTIONS = [1, 2, 3] as const;
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  pt: "Português",
+  "pt-BR": "Português (BR)",
+  "pt-PT": "Português (PT)",
+  en: "Inglês",
+  es: "Espanhol",
+  fr: "Francês",
+  de: "Alemão",
+  it: "Italiano",
+  ja: "Japonês",
+  zh: "Chinês",
+  ru: "Russo",
+  nl: "Holandês",
+  ko: "Coreano",
+  la: "Latim",
+};
+
+function languageLabel(code: string): string {
+  return LANGUAGE_LABELS[code] ?? code.toUpperCase();
+}
 
 function ResultSkeleton() {
   return (
@@ -40,13 +71,18 @@ function ResultSkeleton() {
   );
 }
 
-export default function BookRandomizer({ categories }: BookRandomizerProps) {
+export default function BookRandomizer({ categories, languages }: BookRandomizerProps) {
   const [selectedSlug, setSelectedSlug] = useState<string>(ALL_CATEGORIES);
   const [quantity, setQuantity] = useState<number>(1);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [books, setBooks] = useState<BookDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
+
+  const toggleLanguage = useCallback((code: string, checked: boolean) => {
+    setSelectedLanguages((prev) => (checked ? [...prev, code] : prev.filter((c) => c !== code)));
+  }, []);
 
   const sortear = useCallback(async () => {
     setLoading(true);
@@ -55,6 +91,7 @@ export default function BookRandomizer({ categories }: BookRandomizerProps) {
     const params = new URLSearchParams();
     if (selectedSlug !== ALL_CATEGORIES) params.set("category", selectedSlug);
     params.set("count", String(quantity));
+    for (const lang of selectedLanguages) params.append("language", lang);
     if (quantity === 1 && books[0]?.id) params.set("exclude", books[0].id);
 
     try {
@@ -76,7 +113,7 @@ export default function BookRandomizer({ categories }: BookRandomizerProps) {
     } finally {
       setLoading(false);
     }
-  }, [selectedSlug, quantity, books]);
+  }, [selectedSlug, quantity, selectedLanguages, books]);
 
   const resultKey = loading ? "loading" : books.length > 0 ? `books-${books.map((b) => b.id).join("-")}` : "idle";
 
@@ -111,6 +148,38 @@ export default function BookRandomizer({ categories }: BookRandomizerProps) {
             </SelectContent>
           </Select>
         </div>
+
+        {languages.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" type="button" className="w-full justify-between font-normal">
+                <span>
+                  {selectedLanguages.length === 0
+                    ? "Todos os idiomas"
+                    : selectedLanguages.length === 1
+                      ? languageLabel(selectedLanguages[0])
+                      : `${selectedLanguages.length} idiomas selecionados`}
+                </span>
+                <ChevronDown className="size-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]" align="start">
+              <DropdownMenuLabel>Idioma do livro</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {languages.map((lang) => (
+                <DropdownMenuCheckboxItem
+                  key={lang.code}
+                  checked={selectedLanguages.includes(lang.code)}
+                  onCheckedChange={(checked) => toggleLanguage(lang.code, checked === true)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {languageLabel(lang.code)}{" "}
+                  <span className="text-gray-400">({lang.count})</span>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <motion.div whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
           <Button

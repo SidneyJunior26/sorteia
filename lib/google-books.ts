@@ -19,6 +19,7 @@ interface GoogleBooksVolumeInfo {
   publishedDate?: string;
   imageLinks?: GoogleBooksImageLinks;
   industryIdentifiers?: GoogleBooksIndustryIdentifier[];
+  language?: string;
 }
 
 interface GoogleBooksItem {
@@ -40,6 +41,7 @@ export interface NormalizedBook {
   synopsis: string | null;
   coverUrl: string | null;
   publishedDate: string | null;
+  language: string | null;
 }
 
 function pickIsbn(identifiers: GoogleBooksIndustryIdentifier[] | undefined): string | null {
@@ -69,6 +71,7 @@ function normalizeItem(item: GoogleBooksItem): NormalizedBook | null {
     synopsis: sanitizeSynopsis(info.description),
     coverUrl: normalizeCoverUrl(info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail),
     publishedDate: info.publishedDate ?? null,
+    language: info.language ?? null,
   };
 }
 

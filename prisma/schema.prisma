@@ -31,6 +31,7 @@ model Book {
   author         String
   synopsis       String?  @db.Text
   category       String
+  language       String?
   coverUrl       String?
   publishedDate  String?
   source         String   @default("google_books")
@@ -40,6 +41,7 @@ model Book {
   affiliateLinks AffiliateLink[]
 
   @@index([category])
+  @@index([language])
 }
 
 /// Categories drive the Google Books search terms used by the sync
