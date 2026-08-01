@@ -10,14 +10,36 @@ category) with cover, synopsis, and affiliate buy buttons for Amazon,
 Mercado Livre, and Shopee. Full product plan: `PLANO.md`. Setup/deploy
 walkthrough: `README.md`.
 
-No book is ever entered manually. A cron job (`/api/cron/sync-books`)
-pulls books per category from the Google Books API into a local
-Postgres index; the randomizer queries that index (`ORDER BY random()`)
-so the user-facing path never touches the external API. The catalog is
-Portuguese-only — `lib/sync.ts` fetches per category, drops the
+No book is ever manually typed in — every field (title, ISBN, cover,
+synopsis) is always sourced from the Google Books API, never
+fabricated. Two population paths feed the same `Book` table: the cron
+job (`/api/cron/sync-books` → `lib/sync.ts`) does a broad per-category
+keyword search; `prisma/curate.ts` (run manually, `npm run
+prisma:curate`) instead walks a hand-picked list of well-known/popular
+authors per category and pulls their real catalog via Google Books'
+`inauthor:` search — curation only picks *which authors*, not the book
+data itself. The randomizer queries the local Postgres index (`ORDER
+BY random()`) so the user-facing path never touches the external API.
+The catalog is Portuguese-only — both paths discard any item whose
+`language` field isn't `pt*`; `lib/sync.ts` additionally drops the
 `subject:xxx` qualifier (Google's own English genre taxonomy, which
-otherwise skews results English), and discards any item whose
-`language` field isn't `pt*`.
+otherwise skews results English).
+
+`Book.category` is nullable: only 12 categories are kept in the
+`Category` table (down from an original 29 modeled on Amazon's
+storefront — see `prisma/seed.ts`). Books outside those 12 are left
+uncategorized (`category = null`) rather than deleted, and only
+surface when the frontend's category filter is left on "Todas as
+categorias" — see `getCategories()` in `app/page.tsx` and the `WHERE`
+clause in `app/api/random-book/route.ts`.
+
+Google Books' `inauthor:` operator is quoted-string-hostile — wrapping
+a multi-word name in quotes (`inauthor:"Jane Austen"`) returns
+near-empty/irrelevant results; the working form has no quotes
+(`inauthor:Jane Austen`). The API has also been observed returning
+inconsistent `totalItems` for the identical query across back-to-back
+calls — a Google-side reliability issue `prisma/curate.ts` compensates
+for with retries, not something fixable on our end.
 
 ## Commands
 
@@ -28,7 +50,8 @@ npm run lint               # ESLint (next/core-web-vitals)
 npm run typecheck           # tsc --noEmit
 npx prisma validate          # validate prisma/schema.prisma without a DB connection
 npx prisma migrate dev        # create/apply a migration locally (needs DATABASE_URL)
-npx prisma db seed             # populate the ~10 seed categories (prisma/seed.ts)
+npx prisma db seed             # populate the 12 curated categories (prisma/seed.ts)
+npm run prisma:curate          # one-off: populate Book via curated popular-author lists (prisma/curate.ts)
 ```
 
 There is no test suite in this repo — `lint`, `typecheck`, `build`, and
@@ -69,6 +92,13 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync
   signal than Google's near-always-empty `ratingsCount`). Failures are
   caught per-category and per-book so one bad category/book never
   aborts the run — see `CategorySyncResult`.
+- **`prisma/curate.ts`** — one-off script, not wired to any route or
+  cron. `CATEGORY_AUTHORS` maps each of the 12 kept categories to a
+  hand-picked author list; for each author it queries Google Books'
+  `inauthor:` search (unquoted — see note above), filters to `pt*` +
+  has-ISBN, caps how many books one author can contribute
+  (`MAX_PER_AUTHOR`), and upserts with `source: "curated"`. Idempotent
+  — safe to rerun to top up thin categories.
 - **`lib/google-books.ts`** — fetches + paginates the Google Books API,
   normalizes raw items into `NormalizedBook`, runs synopses through
   `sanitizeSynopsis`. Malformed items (no title) are dropped silently.
@@ -83,10 +113,12 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync
   isolated seam (`getShopeeAffiliateLink`) for the real
   `generateShortLink` Open API call, not yet implemented (see
   `PLANO.md` §7 and §9 for status).
-- **`prisma/schema.prisma`** — `Book` (the auto-synced cache, not a
-  manual catalog), `Category` (drives both the Google Books search
-  terms and the frontend filter dropdown), `AffiliateLink` (click
-  counters only — URLs are never persisted, always rebuilt on demand).
+- **`prisma/schema.prisma`** — `Book` (populated by the cron sync or
+  `prisma/curate.ts`, never hand-entered; `category` nullable, see
+  above), `Category` (the 12 kept categories — drives both the Google
+  Books search terms and the frontend filter dropdown), `AffiliateLink`
+  (click counters only — URLs are never persisted, always rebuilt on
+  demand).
 
 Env vars are documented inline in `.env.example`; the site runs with
 just `DATABASE_URL`/`CRON_SECRET` set — affiliate tag vars are optional

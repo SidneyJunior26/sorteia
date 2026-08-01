@@ -38,7 +38,7 @@ export default async function HomePage() {
         <TextType
           as="h1"
           className="text-3xl sm:text-4xl font-bold text-brand-900 mb-3"
-          text="Não sabe o que ler? Sorteia um livro."
+          text="Não sabe o que ler? Sorteie um livro."
           typingSpeed={45}
           initialDelay={200}
           loop={false}

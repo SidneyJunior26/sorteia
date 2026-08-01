@@ -24,7 +24,7 @@ interface RandomBookRow {
   title: string;
   author: string;
   synopsis: string | null;
-  category: string;
+  category: string | null;
   language: string | null;
   coverUrl: string | null;
   publishedDate: string | null;

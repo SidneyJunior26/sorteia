@@ -3,76 +3,23 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 /**
- * Same category list Amazon uses for its Kindle/livros store, each
- * mapped to Google Books search terms in Portuguese. These terms are
- * what the sync cron job sends to the Google Books API (`q=` param)
- * to populate the book index.
+ * 12 categorias mais populares/genéricas, reduzidas a partir da lista
+ * original de 29 (que espelhava as categorias da Amazon). Livros que
+ * não se encaixam bem em nenhuma delas ficam sem categoria
+ * (Book.category = null) e só aparecem no sorteio quando nenhum
+ * filtro de categoria é aplicado. searchTerms ainda alimenta o cron
+ * de sync (/api/cron/sync-books) para essas 12.
  */
 const categories = [
   {
-    name: "Administração, Negócios e Economia",
-    slug: "administracao-negocios-economia",
-    searchTerms: "administração negócios economia subject:business-economics",
+    name: "Romance",
+    slug: "romance",
+    searchTerms: "romance subject:romance",
   },
   {
-    name: "Arte, Cinema e Fotografia",
-    slug: "arte-cinema-fotografia",
-    searchTerms: "arte cinema fotografia subject:art",
-  },
-  {
-    name: "Artesanato, Casa e Estilo de Vida",
-    slug: "artesanato-casa-estilo-de-vida",
-    searchTerms: "artesanato decoração casa",
-  },
-  {
-    name: "Autoajuda",
-    slug: "autoajuda",
-    searchTerms: "autoajuda desenvolvimento pessoal",
-  },
-  {
-    name: "Biografias e Histórias Reais",
-    slug: "biografias-historias-reais",
-    searchTerms: "biografia memórias subject:biography",
-  },
-  {
-    name: "Ciências",
-    slug: "ciencias",
-    searchTerms: "ciência divulgação científica subject:science",
-  },
-  {
-    name: "Computação, Informática e Mídias Digitais",
-    slug: "computacao-informatica-midias-digitais",
-    searchTerms: "computação informática tecnologia subject:computers",
-  },
-  {
-    name: "Crônicas, Humor e Entretenimento",
-    slug: "cronicas-humor-entretenimento",
-    searchTerms: "crônicas humor subject:humor",
-  },
-  {
-    name: "Direito",
-    slug: "direito",
-    searchTerms: "direito subject:law",
-  },
-  {
-    name: "Educação, Referência e Didáticos",
-    slug: "educacao-referencia-didaticos",
-    searchTerms: "educação didático subject:education",
-  },
-  {
-    name: "Engenharia e transporte",
-    slug: "engenharia-e-transporte",
-    searchTerms: "engenharia transporte subject:technology-engineering",
-  },
-  {
-    name: "Erótico",
-    slug: "erotico",
-    searchTerms: "romance erótico literatura erótica",
-  },
-  {
-    name: "Esportes e Lazer",
-    slug: "esportes-e-lazer",
-    searchTerms: "esportes lazer",
+    name: "Literatura e ficção",
+    slug: "literatura-e-ficcao",
+    searchTerms: "literatura ficção subject:fiction",
   },
   {
     name: "Fantasia, Horror e Ficção Científica",
@@ -80,19 +27,24 @@ const categories = [
     searchTerms: "fantasia terror ficção científica subject:fiction",
   },
   {
-    name: "Gastronomia e Culinária",
-    slug: "gastronomia-e-culinaria",
-    searchTerms: "culinária gastronomia receitas subject:cooking",
+    name: "Policial, Suspense e Mistério",
+    slug: "policial-suspense-misterio",
+    searchTerms: "policial suspense mistério",
   },
   {
-    name: "História",
-    slug: "historia",
-    searchTerms: "história subject:history",
+    name: "Autoajuda",
+    slug: "autoajuda",
+    searchTerms: "autoajuda desenvolvimento pessoal",
   },
   {
-    name: "HQs, Mangás e Graphic Novels",
-    slug: "hqs-mangas-graphic-novels",
-    searchTerms: "quadrinhos mangá graphic novel",
+    name: "Administração, Negócios e Economia",
+    slug: "administracao-negocios-economia",
+    searchTerms: "administração negócios economia subject:business-economics",
+  },
+  {
+    name: "Biografias e Histórias Reais",
+    slug: "biografias-historias-reais",
+    searchTerms: "biografia memórias subject:biography",
   },
   {
     name: "Infantil",
@@ -105,54 +57,19 @@ const categories = [
     searchTerms: "jovens adolescentes literatura juvenil",
   },
   {
-    name: "LGBTQ+",
-    slug: "lgbtq",
-    searchTerms: "livros LGBTQ literatura queer",
+    name: "HQs, Mangás e Graphic Novels",
+    slug: "hqs-mangas-graphic-novels",
+    searchTerms: "quadrinhos mangá graphic novel",
   },
   {
-    name: "Literatura e ficção",
-    slug: "literatura-e-ficcao",
-    searchTerms: "literatura ficção subject:fiction",
-  },
-  {
-    name: "Livros internacionais",
-    slug: "livros-internacionais",
-    searchTerms: "literatura estrangeira livros internacionais",
-  },
-  {
-    name: "Medicina",
-    slug: "medicina",
-    searchTerms: "medicina saúde subject:medical",
-  },
-  {
-    name: "Policial, Suspense e Mistério",
-    slug: "policial-suspense-misterio",
-    searchTerms: "policial suspense mistério",
-  },
-  {
-    name: "Política, Filosofia e Ciências Sociais",
-    slug: "politica-filosofia-ciencias-sociais",
-    searchTerms: "política filosofia ciências sociais subject:philosophy",
+    name: "Crônicas, Humor e Entretenimento",
+    slug: "cronicas-humor-entretenimento",
+    searchTerms: "crônicas humor subject:humor",
   },
   {
     name: "Religião e espiritualidade",
     slug: "religiao-e-espiritualidade",
     searchTerms: "religião espiritualidade",
-  },
-  {
-    name: "Romance",
-    slug: "romance",
-    searchTerms: "romance subject:romance",
-  },
-  {
-    name: "Saúde e Família",
-    slug: "saude-e-familia",
-    searchTerms: "saúde família bem-estar",
-  },
-  {
-    name: "Turismo e Guias de Viagem",
-    slug: "turismo-e-guias-de-viagem",
-    searchTerms: "turismo viagem guia subject:travel",
   },
 ];
 
@@ -173,11 +90,28 @@ async function main() {
     console.log(`  ✓ ${result.name} (${result.slug})`);
   }
 
-  const removed = await prisma.category.deleteMany({
+  const removedCategories = await prisma.category.findMany({
     where: { slug: { notIn: currentSlugs } },
+    select: { name: true },
   });
-  if (removed.count > 0) {
-    console.log(`  Removidas ${removed.count} categoria(s) fora da lista atual.`);
+
+  if (removedCategories.length > 0) {
+    const removedNames = removedCategories.map((c) => c.name);
+
+    // Books tagged with a category that's leaving the curated list
+    // don't get deleted — they just become uncategorized, so they
+    // still surface when no category filter is applied.
+    const { count: uncategorized } = await prisma.book.updateMany({
+      where: { category: { in: removedNames } },
+      data: { category: null },
+    });
+
+    const { count: removed } = await prisma.category.deleteMany({
+      where: { slug: { notIn: currentSlugs } },
+    });
+
+    console.log(`  Removidas ${removed} categoria(s) fora da lista atual.`);
+    console.log(`  ${uncategorized} livro(s) ficaram sem categoria.`);
   }
 
   console.log("Seed concluído.");

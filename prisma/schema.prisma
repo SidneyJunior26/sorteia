@@ -21,8 +21,12 @@ enum Store {
   MERCADO_LIVRE
 }
 
-/// Auto-synced index of books, populated by the Google Books sync
-/// cron job. This is a cache, not a manually curated catalog.
+/// Book index, populated either by the Google Books sync cron job
+/// (source="google_books") or by the one-off curated-popular-authors
+/// script (source="curated", see prisma/curate.ts). `category` is
+/// nullable: curated/synced books outside the 12 kept categories are
+/// left uncategorized and only surface when no category filter is
+/// applied.
 model Book {
   id             String   @id @default(cuid())
   googleBooksId  String   @unique
@@ -30,7 +34,7 @@ model Book {
   title          String
   author         String
   synopsis       String?  @db.Text
-  category       String
+  category       String?
   language       String?
   ratingsCount   Int      @default(0)
   averageRating  Float?

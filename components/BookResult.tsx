@@ -32,12 +32,14 @@ export default function BookResult({ book }: BookResultProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <Badge
-            variant="secondary"
-            className="mb-2 uppercase tracking-wide text-brand-600 bg-brand-50 hover:bg-brand-50"
-          >
-            {book.category}
-          </Badge>
+          {book.category && (
+            <Badge
+              variant="secondary"
+              className="mb-2 uppercase tracking-wide text-brand-600 bg-brand-50 hover:bg-brand-50"
+            >
+              {book.category}
+            </Badge>
+          )}
           <h2 className="text-xl font-bold text-gray-900 mb-1">{book.title}</h2>
           <p className="text-sm text-gray-600 mb-3">{book.author}</p>
 
@@ -47,41 +49,60 @@ export default function BookResult({ book }: BookResultProps) {
             </p>
           )}
 
-          <Button
-            asChild
-            size="lg"
-            className="w-full sm:w-auto bg-[#131921] hover:bg-[#232f3e] text-white gap-2 px-6"
-          >
-            <a href={`/go/${book.id}/AMAZON`} target="_blank" rel="noopener noreferrer sponsored">
-              <ShoppingCart className="size-4 shrink-0 text-[#ff9900]" />
-              <span>
-                Comprar na{" "}
-                <span className="relative inline-block font-bold">
-                  amazon
-                  <svg
-                    className="absolute left-0 -bottom-1.5 w-full"
-                    viewBox="0 0 100 18"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M2 3 Q50 18 96 4"
-                      stroke="#ff9900"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M88 1.5 L97 4 L91 11"
-                      stroke="#ff9900"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto bg-[#131921] hover:bg-[#232f3e] text-white gap-2 px-6"
+            >
+              <a href={`/go/${book.id}/AMAZON`} target="_blank" rel="noopener noreferrer sponsored">
+                <ShoppingCart className="size-4 shrink-0 text-[#ff9900]" />
+                <span>
+                  Buscar na{" "}
+                  <span className="relative inline-block font-bold">
+                    amazon
+                    <svg
+                      className="absolute left-0 -bottom-1.5 w-full"
+                      viewBox="0 0 100 18"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 3 Q50 18 96 4"
+                        stroke="#ff9900"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M88 1.5 L97 4 L91 11"
+                        stroke="#ff9900"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                 </span>
-              </span>
-            </a>
-          </Button>
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto bg-[#FFE600] hover:bg-[#f7dc00] text-[#3483FA] gap-2 px-6"
+            >
+              <a
+                href={`/go/${book.id}/MERCADO_LIVRE`}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+              >
+                <ShoppingCart className="size-4 shrink-0" />
+                <span>
+                  Buscar no <span className="font-bold">Mercado Livre</span>
+                </span>
+              </a>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

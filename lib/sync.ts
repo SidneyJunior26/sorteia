@@ -6,7 +6,7 @@ const MIN_RATINGS_WITHOUT_ISBN = 5;
 // Portuguese-only catalog. Language codes from Google Books come as
 // "pt", "pt-BR", "pt-PT", etc., so this checks the prefix rather than
 // an exact match.
-function isPortuguese(language: string | null): boolean {
+export function isPortuguese(language: string | null): boolean {
   if (!language) return false;
   return language.toLowerCase().startsWith("pt");
 }
