@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +13,31 @@ interface BookResultProps {
 }
 
 export default function BookResult({ book }: BookResultProps) {
+  const [copied, setCopied] = useState(false);
+
+  const shareText = `"${book.title}" (${book.author}) — sorteei esse aqui. Sorteia o seu também:`;
+
+  async function handleShare() {
+    const url = window.location.origin;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: book.title, text: shareText, url });
+      } catch {
+        // User cancelled the native share sheet — not an error.
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${shareText} ${url}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access denied — silently ignore, button just does nothing.
+    }
+  }
+
   return (
     <Card className="border-brand-100">
       <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row gap-6">
@@ -101,6 +129,22 @@ export default function BookResult({ book }: BookResultProps) {
                   Buscar no <span className="font-bold">Mercado Livre</span>
                 </span>
               </a>
+            </Button>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-brand-100">
+            <p className="text-xs text-gray-500 mb-2">
+              Sorteou um livro bom? Manda pra quem também nunca sabe o que ler.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="gap-2"
+            >
+              <Share2 className="size-3.5 shrink-0" />
+              {copied ? "Copiado!" : "Compartilhar esse sorteio"}
             </Button>
           </div>
         </div>

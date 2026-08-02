@@ -53,6 +53,18 @@ export default async function HomePage() {
         </p>
       </section>
 
+      <section className="text-center mb-8 max-w-xl mx-auto">
+        <h2 className="text-sm font-semibold text-brand-700 mb-1">
+          Por que sortear em vez de escolher?
+        </h2>
+        <p className="text-sm text-gray-600">
+          Escolher entre milhares de livros trava mais do que ajuda — é o
+          próprio motivo de você não saber o que ler. Aqui você sorteia um
+          livro real, do catálogo sincronizado com a Amazon, com sinopse e
+          onde comprar na hora. Sem pesquisa, sem decisão, sem demora.
+        </p>
+      </section>
+
       <BookRandomizer categories={categories} />
     </div>
   );

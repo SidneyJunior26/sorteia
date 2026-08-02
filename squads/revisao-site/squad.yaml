@@ -1,6 +1,6 @@
 code: "revisao-site"
 name: "Revisão de Site"
-description: "Propõe nome de marca, revisa a copy e cria conceito de logo para o Sistema de Livros."
+description: "Propõe nome de marca, revisa a copy, avalia se vale a pena adicionar seções novas à landing page e cria conceito de logo para o Sistema de Livros."
 
 skills:
   - web_search
@@ -41,4 +41,16 @@ pipeline:
     on_reject: 6
   - step: 8
     name: "checkpoint-aprovar-logo"
+    type: "checkpoint"
+  - step: 9
+    name: "Avaliar seções novas da landing page"
+    agent: "bruno-growth"
+    execution: "inline"
+  - step: 10
+    name: "Review das seções novas"
+    agent: "renata-revisao"
+    execution: "inline"
+    on_reject: 9
+  - step: 11
+    name: "checkpoint-aprovar-secoes-novas"
     type: "checkpoint"
