@@ -295,10 +295,27 @@ async function curateCategory(categoryName: string, authors: string[]): Promise<
   return { category: categoryName, collected: collected.size, upserted, authorsWithNoMatch };
 }
 
+/**
+ * Optional CURATE_CATEGORIES env var ("|"-separated category names —
+ * commas can't be the separator since some category names contain
+ * one, e.g. "HQs, Mangás e Graphic Novels") restricts the run to
+ * specific categories — useful for topping up just the categories
+ * that came up thin on a previous run, without re-spending API quota
+ * on ones that are already well populated.
+ */
+function categoriesToRun(): [string, string[]][] {
+  const filter = process.env.CURATE_CATEGORIES;
+  const entries = Object.entries(CATEGORY_AUTHORS);
+  if (!filter) return entries;
+
+  const wanted = new Set(filter.split("|").map((s) => s.trim()));
+  return entries.filter(([categoryName]) => wanted.has(categoryName));
+}
+
 async function main() {
   const results: CategoryCurationResult[] = [];
 
-  for (const [categoryName, authors] of Object.entries(CATEGORY_AUTHORS)) {
+  for (const [categoryName, authors] of categoriesToRun()) {
     console.log(`\n=== ${categoryName} ===`);
     const result = await curateCategory(categoryName, authors);
     console.log(`  Coletados: ${result.collected}, salvos: ${result.upserted}`);
