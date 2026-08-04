@@ -1,0 +1,8 @@
+id,name,title,icon,path
+rita-referencia,Rita Referência,Pesquisadora de Tendências,🔍,./agents/rita-referencia.agent.md
+gustavo-growth,Gustavo Growth,Estrategista de Conteúdo,📈,./agents/gustavo-growth.agent.md
+ivo-instagram,Ivo Instagram,Criador Instagram,🎬,./agents/ivo-instagram.agent.md
+tais-tiktok,Tais TikTok,Criadora TikTok,🎵,./agents/tais-tiktok.agent.md
+duda-design,Duda Design,Designer Visual,🎨,./agents/duda-design.agent.md
+vera-veredito,Vera Veredito,Revisora de Qualidade,🔍,./agents/vera-veredito.agent.md
+paulo-publica,Paulo Publica,Publicador,📤,./agents/paulo-publica.agent.md

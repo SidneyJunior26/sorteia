@@ -1,0 +1,114 @@
+# Pipeline — Growth Conteúdo
+# Entry point lido pelo Pipeline Runner (squads/growth-conteudo/pipeline/pipeline.yaml).
+# Cada step referencia um arquivo em pipeline/steps/. Checkpoints não têm agente.
+
+pipeline:
+  - step: 1
+    file: "step-01-foco-pesquisa.md"
+    name: "Foco da pesquisa"
+    type: "checkpoint"
+
+  - step: 2
+    file: "step-02-pesquisa-tendencias.md"
+    name: "Pesquisa de tendências"
+    agent: "rita-referencia"
+    execution: "subagent"
+    model_tier: "fast"
+
+  - step: 3
+    file: "step-03-escolher-tendencia.md"
+    name: "Escolher tendência/ângulo do ciclo"
+    type: "checkpoint"
+
+  - step: 4
+    file: "step-04-calendario-editorial.md"
+    name: "Calendário editorial e ajuste de roadmap"
+    agent: "gustavo-growth"
+    execution: "inline"
+
+  - step: 5
+    file: "step-05-aprovar-estrategia.md"
+    name: "Aprovar estratégia/calendário"
+    type: "checkpoint"
+
+  - step: 6
+    file: "step-06-gerar-angulos.md"
+    name: "Gerar ângulos de conteúdo"
+    agent: "ivo-instagram"
+    execution: "subagent"
+    model_tier: "powerful"
+
+  - step: 7
+    file: "step-07-escolher-angulo.md"
+    name: "Escolher ângulo do ciclo"
+    type: "checkpoint"
+
+  - step: 8
+    file: "step-08-criar-instagram-reels.md"
+    name: "Criar conteúdo Instagram Reels"
+    agent: "ivo-instagram"
+    execution: "subagent"
+    model_tier: "powerful"
+
+  - step: 9
+    file: "step-09-criar-instagram-feed.md"
+    name: "Criar conteúdo Instagram Feed"
+    agent: "ivo-instagram"
+    execution: "subagent"
+    model_tier: "powerful"
+
+  - step: 10
+    file: "step-10-criar-roteiro-tiktok.md"
+    name: "Criar roteiro TikTok"
+    agent: "tais-tiktok"
+    execution: "subagent"
+    model_tier: "powerful"
+
+  - step: 11
+    file: "step-11-aprovar-conteudo.md"
+    name: "Aprovar conteúdo (obrigatório antes de renderizar)"
+    type: "checkpoint"
+
+  - step: 12
+    file: "step-12-renderizar-visuais.md"
+    name: "Renderizar visuais"
+    agent: "duda-design"
+    execution: "subagent"
+    model_tier: "powerful"
+
+  - step: 13
+    file: "step-13-revisao-qualidade.md"
+    name: "Revisão de qualidade"
+    agent: "vera-veredito"
+    execution: "inline"
+    on_reject: 8
+
+  - step: 14
+    file: "step-14-aprovar-final.md"
+    name: "Aprovar final"
+    type: "checkpoint"
+
+  - step: 15
+    file: "step-15-publicar.md"
+    name: "Publicação"
+    agent: "paulo-publica"
+    execution: "inline"
+
+checkpoints:
+  - 1
+  - 3
+  - 5
+  - 7
+  - 11
+  - 14
+
+# Nota de design (Gate 2b): o checkpoint do step 11 precede diretamente o step 12
+# (Duda Design renderiza visuais) e o checkpoint do step 14 precede diretamente o
+# step 15 (Paulo Publica publica) — satisfaz a exigência de aprovação humana
+# imediatamente antes de qualquer renderização ou publicação.
+#
+# Nota de design (ângulos): a etapa de geração de ângulos (step 6) roda uma única
+# vez com o agente ivo-instagram (task generate-angles.md), cobrindo os 3 formatos
+# de uma vez (Reels, Feed, TikTok) — Tais TikTok não tem task própria de geração de
+# ângulo porque o ângulo é a ideia central, agnóstica de formato; ela recebe o
+# ângulo já aprovado no step 7 e adapta para TikTok no step 10.

@@ -1,0 +1,28 @@
+code: "growth-conteudo"
+name: "Growth Conteúdo"
+description: "Analisa tendências de BookTok/Bookstagram Brasil, monta calendário editorial e produz conteúdo (Instagram Reels, Instagram Feed e TikTok) para atrair novos usuários ao Achei Meu Livro, com renderização visual e publicação assistida."
+
+skills:
+  # Nativos do Claude Code — não exigem instalação em skills/, sempre disponíveis
+  - web_search
+  - web_fetch
+  # Instaladas em skills/ (ver squads/growth-conteudo/README de validação em squad build)
+  - image-creator
+  - image-ai-generator
+  - template-designer
+  - instagram-publisher
+  # Higgsfield: ferramentas MCP nativas do workspace (mcp__claude_ai_Higgsfield__*),
+  # NÃO são skills instaladas em skills/ — não têm SKILL.md e não passam pela
+  # verificação "skills/{skill}/SKILL.md" do Pipeline Runner. Usadas diretamente
+  # pelos agentes via chamada de ferramenta MCP nativa.
+  - higgsfield_generate_image
+  - higgsfield_generate_video
+  - higgsfield_tiktok_publish
+
+data:
+  - pipeline/data/research-brief.md
+  - pipeline/data/domain-framework.md
+  - pipeline/data/quality-criteria.md
+  - pipeline/data/output-examples.md
+  - pipeline/data/anti-patterns.md
+  - pipeline/data/tone-of-voice.md

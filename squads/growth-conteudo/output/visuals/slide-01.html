@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Slide 1 — Capa</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1440px; overflow: hidden;
+    background: #1F1B2E;
+    font-family: 'Poppins', sans-serif;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 80px;
+  }
+  .dice {
+    font-size: 96px;
+    margin-bottom: 48px;
+    line-height: 1;
+  }
+  .hook {
+    font-size: 72px; font-weight: 800; color: #FFFFFF;
+    text-align: center; line-height: 1.28;
+    max-width: 920px;
+  }
+  .hook .accent { color: #FF6B4A; }
+  .tag {
+    position: absolute; top: 80px; left: 80px;
+    font-size: 28px; font-weight: 600; color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+  }
+  .swipe-cta {
+    position: absolute; bottom: 64px; right: 80px;
+    font-size: 28px; font-weight: 600; color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .wrap { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="tag">ACHEI MEU LIVRO</span>
+    <span class="dice">🎲</span>
+    <h1 class="hook">Eu pensei que ia cair um clássico batido. <span class="accent">Não caiu.</span></h1>
+    <span class="swipe-cta">Arrasta pro lado →</span>
+  </div>
+</body>
+</html>

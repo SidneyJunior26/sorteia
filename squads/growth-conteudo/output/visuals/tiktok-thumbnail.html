@@ -1,0 +1,70 @@
+<!-- Capa do TikTok: recria o instante de reação genuína (5-17s do roteiro, "para. CAIU ESSE.")
+     sem fabricar foto real de uma pessoa — mesmo design system do ciclo, variando só o
+     rótulo de plataforma e o texto de hook específico do roteiro de TikTok. -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>TikTok — Thumbnail</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px; overflow: hidden;
+    background: linear-gradient(180deg, #1F1B2E 0%, #2A2140 60%, #1F1B2E 100%);
+    font-family: 'Poppins', sans-serif;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .tag {
+    position: absolute; top: 96px; left: 80px;
+    font-size: 28px; font-weight: 700; color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+  }
+  .play-badge {
+    position: absolute; top: 88px; right: 80px;
+    font-size: 40px;
+  }
+  .reveal-card {
+    position: absolute; top: 320px; left: 50%; transform: translateX(-50%);
+    width: 760px; height: 820px; background: #FFFFFF; border-radius: 40px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 40px;
+  }
+  .cover-shape {
+    width: 320px; height: 460px; border-radius: 20px;
+    background: linear-gradient(160deg,#FF6B4A,#1F1B2E);
+  }
+  .reaction-burst {
+    font-size: 84px;
+  }
+  .overlay-bottom {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 620px;
+    background: linear-gradient(180deg, rgba(31,27,46,0) 0%, rgba(31,27,46,0.92) 40%, #1F1B2E 100%);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 80px 96px 80px;
+  }
+  .hook {
+    font-size: 62px; font-weight: 800; color: #FFFFFF;
+    line-height: 1.28; margin-bottom: 32px;
+  }
+  .hook .accent { color: #FF6B4A; }
+  .caption-cta {
+    font-size: 32px; font-weight: 600; color: rgba(255,255,255,0.8);
+  }
+</style>
+</head>
+<body>
+  <span class="tag">ACHEI MEU LIVRO · TIKTOK</span>
+  <span class="play-badge">▶️</span>
+  <div class="reveal-card">
+    <div class="cover-shape"></div>
+    <span class="reaction-burst">😱 🎲</span>
+  </div>
+  <div class="overlay-bottom">
+    <h1 class="hook">para. <span class="accent">CAIU ESSE.</span><br>eu não fazia ideia que existia.</h1>
+    <span class="caption-cta">salva pra tentar depois</span>
+  </div>
+</body>
+</html>
