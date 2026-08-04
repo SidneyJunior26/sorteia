@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,20 @@ interface ShelfRowProps {
   onRemoveItem: (itemId: string) => void;
 }
 
+interface ActivePanel {
+  item: ShelfItemDTO;
+  x: number;
+  y: number;
+  /** true = opened by click/keyboard, stays open until explicitly closed.
+   *  false = hover preview, closes shortly after the cursor leaves. */
+  pinned: boolean;
+}
+
+// Grace period between the cursor leaving a spine and the preview
+// closing — without it, moving the mouse from the spine into the panel
+// to click a buy link or the shelf select would always close it first.
+const HOVER_HIDE_DELAY = 150;
+
 export default function ShelfRow({
   shelf,
   allShelves,
@@ -36,12 +50,76 @@ export default function ShelfRow({
   onMoveItem,
   onRemoveItem,
 }: ShelfRowProps) {
-  const [selected, setSelected] = useState<ShelfItemDTO | null>(null);
+  const [active, setActive] = useState<ActivePanel | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // The selected book may have been moved or removed since; re-read it
-  // from the current shelf so the panel never shows a stale row.
-  const selectedItem = selected
-    ? shelf.items.find((i) => i.id === selected.id) ?? null
+  useEffect(() => {
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, []);
+
+  function clearHideTimer() {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  }
+
+  function scheduleHide(itemId: string) {
+    clearHideTimer();
+    hideTimer.current = setTimeout(() => {
+      setActive((current) =>
+        current && current.item.id === itemId && !current.pinned
+          ? null
+          : current
+      );
+    }, HOVER_HIDE_DELAY);
+  }
+
+  function handleHoverStart(item: ShelfItemDTO, point: { x: number; y: number }) {
+    if (active?.pinned) return;
+    clearHideTimer();
+    setActive({ item, x: point.x, y: point.y, pinned: false });
+  }
+
+  function handleHoverMove(item: ShelfItemDTO, point: { x: number; y: number }) {
+    if (active?.pinned) return;
+    setActive((current) =>
+      current && current.item.id === item.id && !current.pinned
+        ? { ...current, x: point.x, y: point.y }
+        : current
+    );
+  }
+
+  function handleHoverEnd(item: ShelfItemDTO) {
+    if (active?.pinned) return;
+    scheduleHide(item.id);
+  }
+
+  function handleActivate(item: ShelfItemDTO, point: { x: number; y: number }) {
+    clearHideTimer();
+    setActive((current) =>
+      current?.pinned && current.item.id === item.id
+        ? null
+        : { item, x: point.x, y: point.y, pinned: true }
+    );
+  }
+
+  function handlePanelLeave() {
+    if (!active || active.pinned) return;
+    scheduleHide(active.item.id);
+  }
+
+  function close() {
+    clearHideTimer();
+    setActive(null);
+  }
+
+  // Re-read from the current shelf so the panel never shows a stale row
+  // (the book may have moved or been removed since it was opened).
+  const activeItem = active
+    ? shelf.items.find((i) => i.id === active.item.id) ?? null
     : null;
 
   return (
@@ -97,10 +175,11 @@ export default function ShelfRow({
 
         <Bookcase
           items={shelf.items}
-          onSelect={(item) =>
-            setSelected((current) => (current?.id === item.id ? null : item))
-          }
-          selectedId={selectedItem?.id ?? null}
+          selectedId={activeItem?.id ?? null}
+          onHoverStart={handleHoverStart}
+          onHoverMove={handleHoverMove}
+          onHoverEnd={handleHoverEnd}
+          onActivate={handleActivate}
           emptyMessage={
             <p className="text-sm text-muted-foreground">
               Prateleira vazia. Sorteie um livro e mande pra cá.
@@ -108,22 +187,25 @@ export default function ShelfRow({
           }
         />
 
-        {selectedItem && (
+        {active && activeItem && (
           <BookDetailPanel
-            item={selectedItem}
+            item={activeItem}
             shelves={allShelves}
             currentShelfId={shelf.id}
+            point={{ x: active.x, y: active.y }}
             busy={busy}
-            onClose={() => setSelected(null)}
+            onClose={close}
+            onPanelEnter={clearHideTimer}
+            onPanelLeave={handlePanelLeave}
             onMove={(shelfId) => {
               if (shelfId !== shelf.id) {
-                onMoveItem(selectedItem.id, shelfId);
-                setSelected(null);
+                onMoveItem(activeItem.id, shelfId);
+                close();
               }
             }}
             onRemove={() => {
-              onRemoveItem(selectedItem.id);
-              setSelected(null);
+              onRemoveItem(activeItem.id);
+              close();
             }}
           />
         )}

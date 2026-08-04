@@ -6,14 +6,23 @@ import type { ShelfItemDTO } from "@/types/shelf";
 
 interface BookSpineProps {
   item: ShelfItemDTO;
-  onSelect: (item: ShelfItemDTO) => void;
   isSelected: boolean;
+  /** Mouse only — the transient hover preview that follows the cursor. */
+  onHoverStart: (item: ShelfItemDTO, point: { x: number; y: number }) => void;
+  onHoverMove: (item: ShelfItemDTO, point: { x: number; y: number }) => void;
+  onHoverEnd: (item: ShelfItemDTO) => void;
+  /** Click or keyboard Enter/Space — pins the panel open (touch + a11y
+   *  fallback, since hover doesn't exist on either). */
+  onActivate: (item: ShelfItemDTO, point: { x: number; y: number }) => void;
 }
 
 export default function BookSpine({
   item,
-  onSelect,
   isSelected,
+  onHoverStart,
+  onHoverMove,
+  onHoverEnd,
+  onActivate,
 }: BookSpineProps) {
   const reduceMotion = useReducedMotion();
   const style = spineStyle(item.id, item.title);
@@ -26,7 +35,22 @@ export default function BookSpine({
       type="button"
       layoutId={item.id}
       layout
-      onClick={() => onSelect(item)}
+      onMouseEnter={(e) => onHoverStart(item, { x: e.clientX, y: e.clientY })}
+      onMouseMove={(e) => onHoverMove(item, { x: e.clientX, y: e.clientY })}
+      onMouseLeave={() => onHoverEnd(item)}
+      onClick={(e) => {
+        // A keyboard-triggered click (Enter/Space) reports clientX/Y as
+        // 0,0 in every major browser — `detail === 0` is how you tell it
+        // apart from a real pointer click, whose detail is the click
+        // count. Fall back to the button's own position so Tab-ing to a
+        // spine doesn't pin the panel into the viewport's top-left corner.
+        if (e.detail === 0) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          onActivate(item, { x: rect.left + rect.width / 2, y: rect.top });
+          return;
+        }
+        onActivate(item, { x: e.clientX, y: e.clientY });
+      }}
       initial={
         reduceMotion ? false : { y: -180, rotateZ: -14, opacity: 0 }
       }

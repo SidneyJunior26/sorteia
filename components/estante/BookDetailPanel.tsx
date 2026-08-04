@@ -1,5 +1,7 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ShoppingCart, Trash2, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -18,29 +20,77 @@ interface BookDetailPanelProps {
   item: ShelfItemDTO;
   shelves: ShelfDTO[];
   currentShelfId: string;
+  /** Viewport coordinate the panel anchors near — the cursor position on
+   *  hover, or the spine's own position when opened via click/keyboard. */
+  point: { x: number; y: number };
   onClose: () => void;
   onMove: (shelfId: string) => void;
   onRemove: () => void;
   busy: boolean;
+  /** Cancels/reschedules the parent's hide-on-leave timer, so moving the
+   *  cursor off the spine and into the panel itself doesn't close it. */
+  onPanelEnter: () => void;
+  onPanelLeave: () => void;
 }
+
+const OFFSET_X = 16;
+const OFFSET_Y = -12;
+const VIEWPORT_PADDING = 12;
 
 export default function BookDetailPanel({
   item,
   shelves,
   currentShelfId,
+  point,
   onClose,
   onMove,
   onRemove,
   busy,
+  onPanelEnter,
+  onPanelLeave,
 }: BookDetailPanelProps) {
   const reduceMotion = useReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Starts hidden — the very first paint would otherwise show the panel
+  // at its default top-left/untransformed spot for one frame, before
+  // the layout effect below ever gets to measure and clamp it.
+  const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
-  return (
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+
+    const { width, height } = el.getBoundingClientRect();
+    const maxLeft = window.innerWidth - width - VIEWPORT_PADDING;
+    const maxTop = window.innerHeight - height - VIEWPORT_PADDING;
+
+    const left = Math.min(
+      Math.max(point.x + OFFSET_X, VIEWPORT_PADDING),
+      Math.max(maxLeft, VIEWPORT_PADDING)
+    );
+    const top = Math.min(
+      Math.max(point.y + OFFSET_Y, VIEWPORT_PADDING),
+      Math.max(maxTop, VIEWPORT_PADDING)
+    );
+
+    setStyle({ left, top, opacity: 1 });
+  }, [point.x, point.y]);
+
+  // position: fixed only tracks the viewport when nothing between here
+  // and <body> has a transform — and framer-motion's layoutId/layout on
+  // BookSpine, plus AnimatedContent's gsap tween, both leave one behind
+  // on their wrapper even at rest. Portaling straight to <body> sidesteps
+  // that trap entirely (same reason FlyToShelf does it).
+  return createPortal(
     <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="mt-3"
+      ref={panelRef}
+      initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.15 }}
+      className="fixed z-50 w-[min(340px,calc(100vw-24px))]"
+      style={style}
+      onMouseEnter={onPanelEnter}
+      onMouseLeave={onPanelLeave}
     >
       <SpotlightCard
         className="p-4 sm:p-5"
@@ -155,6 +205,7 @@ export default function BookDetailPanel({
           </div>
         </div>
       </SpotlightCard>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

@@ -55,12 +55,15 @@ body {
        placeholder — `bg-card/70` would silently render fully opaque. */
     --surface-translucent: rgb(255 255 255 / 0.7);
 
-    /* Bookshelf furniture (components/estante). */
-    --wood-top: #a9764a;
-    --wood-face: #7d5432;
-    --wood-edge: #5c3d24;
-    --shelf-back: #efe7dc;
-    --shelf-shadow: rgb(0 0 0 / 0.35);
+    /* Bookshelf furniture (components/estante). Deep mahogany + a brass
+       trim accent for a colonial-cabinet look, rather than the earlier
+       lighter honey-oak tone. */
+    --wood-top: #8b4a2f;
+    --wood-face: #6b3620;
+    --wood-edge: #45210f;
+    --wood-trim: #c9a24b;
+    --shelf-back: #e8dcc8;
+    --shelf-shadow: rgb(40 20 10 / 0.4);
   }
 
   .dark {
@@ -104,11 +107,12 @@ body {
 
     --surface-translucent: rgb(28 24 38 / 0.72);
 
-    --wood-top: #5a3d26;
-    --wood-face: #3f2a1a;
-    --wood-edge: #2a1c11;
-    --shelf-back: #241d16;
-    --shelf-shadow: rgb(0 0 0 / 0.6);
+    --wood-top: #4a2f1d;
+    --wood-face: #33200f;
+    --wood-edge: #1c1108;
+    --wood-trim: #a8823f;
+    --shelf-back: #1a130d;
+    --shelf-shadow: rgb(0 0 0 / 0.65);
   }
 }
 

@@ -3,14 +3,16 @@
  *
  * Pure CSS — react-bits has no bookshelf, so the furniture is hand-built
  * and the library only supplies the motion around it. Colors come from
- * the --wood-* vars in globals.css so it flips with the theme.
+ * the --wood-* vars in globals.css so it flips with the theme. The thin
+ * brass line and double-step front edge give it the more colonial,
+ * built-in-cabinet look — plain flat boards read as flat-pack furniture.
  */
 export default function ShelfPlank() {
   return (
     <div className="relative" aria-hidden="true">
       {/* Top face — the surface the spines sit on. */}
       <div
-        className="h-[10px] rounded-t-[3px]"
+        className="h-[10px]"
         style={{
           background:
             "linear-gradient(to bottom, var(--wood-top), var(--wood-face))",
@@ -26,12 +28,29 @@ export default function ShelfPlank() {
         />
       </div>
 
-      {/* Front edge — the bit you'd see looking straight at the shelf. */}
+      {/* Brass inlay strip, like the trim on a colonial display cabinet. */}
       <div
-        className="h-[7px] rounded-b-[3px]"
+        className="h-[2px]"
+        style={{
+          background:
+            "linear-gradient(to right, transparent, var(--wood-trim), transparent)",
+          opacity: 0.75,
+        }}
+      />
+
+      {/* Front edge, in two steps — a plain single slab reads flat-pack;
+          the reveal between the two tones reads as a moulded profile. */}
+      <div
+        className="h-[5px]"
         style={{
           background:
             "linear-gradient(to bottom, var(--wood-face), var(--wood-edge))",
+        }}
+      />
+      <div
+        className="h-[4px] rounded-b-[2px]"
+        style={{
+          background: "var(--wood-edge)",
           boxShadow: "0 9px 16px -8px var(--shelf-shadow)",
         }}
       />
