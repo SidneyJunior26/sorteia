@@ -33,3 +33,6 @@ prisma/*.db
 # opensquad — persistent browser sessions / cookies, local build cache
 _opensquad/_browser_profile/
 squads/*/_build/
+
+# playwright mcp — screenshots / snapshots taken during local debugging
+.playwright-mcp/

@@ -51,7 +51,7 @@ export default function FloatingLetters() {
       {letters.map((letter) => (
         <motion.span
           key={letter.id}
-          className="absolute font-serif font-bold text-brand-200/40 select-none"
+          className="absolute font-serif font-bold text-brand-200/40 dark:text-brand-400/15 select-none"
           style={{
             top: `${letter.top}%`,
             left: `${letter.left}%`,

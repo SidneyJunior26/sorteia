@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import BookRandomizer from "@/components/BookRandomizer";
 import TextType from "@/components/TextType";
+import AnimatedContent from "@/components/reactbits/AnimatedContent";
+import BlurText from "@/components/reactbits/BlurText";
 import type { CategoryDTO } from "@/types/book";
 
 // The category dropdown needs fresh data from the DB (and the DB may
@@ -37,7 +39,7 @@ export default async function HomePage() {
       <section className="text-center mb-10">
         <TextType
           as="h1"
-          className="text-3xl sm:text-4xl font-bold text-brand-900 mb-3"
+          className="text-3xl sm:text-4xl font-bold text-brand-900 dark:text-brand-100 mb-3"
           text="Não sabe o que ler? Sorteie um livro."
           typingSpeed={45}
           initialDelay={200}
@@ -46,24 +48,31 @@ export default async function HomePage() {
           hideCursorWhileTyping={false}
           cursorCharacter="|"
         />
-        <p className="text-gray-600 max-w-xl mx-auto">
-          Clique em &quot;Sortear livro&quot; pra receber uma sugestão
-          aleatória do catálogo, ou escolha a categoria e a quantidade antes
-          de sortear.
-        </p>
+        <BlurText
+          text='Clique em "Sortear livro" pra receber uma sugestão aleatória do catálogo, ou escolha a categoria e a quantidade antes de sortear.'
+          delay={28}
+          animateBy="words"
+          direction="top"
+          className="text-muted-foreground max-w-xl mx-auto justify-center"
+        />
       </section>
 
-      <section className="text-center mb-8 max-w-xl mx-auto">
-        <h2 className="text-sm font-semibold text-brand-700 mb-1">
-          Por que sortear em vez de escolher?
-        </h2>
-        <p className="text-sm text-gray-600">
-          Escolher entre milhares de livros trava mais do que ajuda — é o
-          próprio motivo de você não saber o que ler. Aqui você sorteia um
-          livro real, do catálogo sincronizado com a Amazon, com sinopse e
-          onde comprar na hora. Sem pesquisa, sem decisão, sem demora.
-        </p>
-      </section>
+      {/* Below the fold on most viewports, so AnimatedContent's
+          ScrollTrigger entrance reads as intentional rather than as a
+          flash of the hero repainting. */}
+      <AnimatedContent distance={40} duration={0.6} threshold={0.15}>
+        <section className="text-center mb-8 max-w-xl mx-auto">
+          <h2 className="text-sm font-semibold text-brand-700 dark:text-brand-300 mb-1">
+            Por que sortear em vez de escolher?
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Escolher entre milhares de livros trava mais do que ajuda — é o
+            próprio motivo de você não saber o que ler. Aqui você sorteia um
+            livro real, do catálogo sincronizado com a Amazon, com sinopse e
+            onde comprar na hora. Sem pesquisa, sem decisão, sem demora.
+          </p>
+        </section>
+      </AnimatedContent>
 
       <BookRandomizer categories={categories} />
     </div>

@@ -10,6 +10,11 @@ category) with cover, synopsis, and affiliate buy buttons for Amazon,
 Mercado Livre, and Shopee. Full product plan: `PLANO.md`. Setup/deploy
 walkthrough: `README.md`.
 
+Sorteio works anonymously. Signing in (name + e-mail + senha, or
+Google) additionally unlocks the **estante** — a personal bookshelf at
+`/estante` where sorteado books are kept on shelves ("Não lidos",
+"Lidos", plus any the user creates). See "Contas e estante" below.
+
 No book is ever manually typed in — every field (title, ISBN, cover,
 synopsis) is always sourced from the Google Books API, never
 fabricated. Two population paths feed the same `Book` table: the cron
@@ -81,6 +86,17 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync
   `CRON_SECRET` bearer token (Vercel Cron sends this automatically once
   the env var is set on the project; see `vercel.json`). Delegates to
   `lib/sync.ts`.
+- **`app/estante/page.tsx`** — server component, `force-dynamic`;
+  `auth()` guard then loads shelves straight from Prisma (same pattern
+  as `app/page.tsx`, no GET API). Renders `EstanteView`, which owns all
+  optimistic state.
+- **`app/api/shelves*`, `app/api/shelf-items*`, `app/api/estante`** —
+  the estante mutations. All start with `requireUserId()` and validate
+  with `zod`, returning `{ error, details: parsed.error.flatten() }` on
+  400 like `random-book` does.
+- **`app/api/signup/route.ts`** — sits outside `/api/auth/*` so it can
+  never collide with the `[...nextauth]` catch-all. Caps the password
+  at 72 bytes because bcrypt truncates silently past that.
 - **`app/go/[bookId]/[store]/route.ts`** — `GET`, builds the affiliate
   URL for a `(book, store)` pair, best-effort increments a click
   counter, and 302-redirects. `store` is validated against the
@@ -118,12 +134,140 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync
   above), `Category` (the 12 kept categories — drives both the Google
   Books search terms and the frontend filter dropdown), `AffiliateLink`
   (click counters only — URLs are never persisted, always rebuilt on
-  demand).
+  demand), plus the accounts/estante models described below.
 
 Env vars are documented inline in `.env.example`; the site runs with
-just `DATABASE_URL`/`CRON_SECRET` set — affiliate tag vars are optional
-and fall back to plain (non-monetized) search links until each program
-approves the account (see README "Quando for aprovado...").
+just `DATABASE_URL`/`CRON_SECRET`/`AUTH_SECRET` set — affiliate tag
+vars and the Google OAuth pair are optional and degrade gracefully
+(plain non-monetized search links; no "Continuar com Google" button).
+
+## Contas e estante
+
+Auth is **NextAuth/Auth.js v5** (`next-auth@5.0.0-beta.x`) with
+`@auth/prisma-adapter`, split across two files for a reason:
+
+- **`auth.config.ts`** is edge-safe and must never import
+  `@/lib/prisma`, the adapter, or `bcryptjs`. It holds the Google
+  provider (registered only when `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+  are both set — `hasGoogleProvider` is exported so the login page can
+  hide a button that would otherwise 500) and the jwt/session callbacks.
+- **`auth.ts`** is Node-only: adapter, Credentials provider (bcrypt cost
+  10, with a dummy-hash compare on the not-found branch so `/entrar`
+  can't be used to enumerate registered e-mails), and the
+  `events.createUser` hook.
+
+Session strategy is **JWT**, forced by the Credentials provider. The
+`Session`/`VerificationToken` tables therefore stay empty — they exist
+only because the adapter's TypeScript contract requires them. Google
+sign-ins still write `User` and `Account` rows (the adapter's
+createUser/linkAccount run regardless of session strategy), which is
+what gives shelves a stable `User.id` to hang off.
+
+There is deliberately **no `middleware.ts`**. Middleware would sit in
+front of every request including `/go/[bookId]/[store]` (the
+monetization path) and `/api/cron/sync-books`; a wrong matcher breaks
+those silently. The real boundary is `await auth()` in
+`app/estante/page.tsx` plus `requireUserId()` (`lib/auth-guard.ts`) at
+the top of every `/api` handler that touches user data.
+
+Estante model, in `prisma/schema.prisma`:
+
+- `Shelf.kind` (`UNREAD | READ | CUSTOM`) — **not the name** — is the
+  stable identity of the two default shelves. `ensureDefaultShelves()`
+  in `lib/shelves.ts` keys on `kind` so a user who renames "Não lidos"
+  to "Fila" never gets a duplicate recreated. It is called from three
+  places, all required: `events.createUser` (Google path),
+  `/api/signup` (credentials path bypasses the adapter entirely), and
+  `/estante` (defensive).
+- `ShelfItem` has `@@unique([userId, bookId])`, which is what enforces
+  "a book lives on exactly one shelf". Adding and moving are therefore
+  the *same* operation — `POST /api/shelf-items` upserts and reassigns
+  `shelfId`.
+- `ShelfItem` keeps both a `bookId` FK (nullable, `onDelete: SetNull`)
+  **and** a title/author/cover snapshot. Nothing deletes `Book` rows
+  today (`lib/sync.ts` only upserts), but if that ever changed the
+  user's shelf degrades to a spine that still renders instead of
+  silently losing books.
+- Deleting a custom shelf moves its books to "Não lidos" inside a
+  transaction *before* the delete — the schema's `onDelete: Cascade`
+  would otherwise destroy them.
+- `User.libraryTitle` is nullable on purpose: null means "not
+  customized", and `resolveLibraryTitle()` derives "Estante do {first
+  name}" so the heading keeps following `User.name` until overridden.
+
+Ownership is always expressed inside the Prisma `where` alongside
+`userId` (`updateMany`/`deleteMany`/`findFirst`), never as a
+fetch-then-compare in JS — that pattern is an IDOR one refactor away.
+Cross-user attempts return 404.
+
+## UI: reactbits, tema e a estante
+
+Visual components come from **reactbits.dev**, vendored into
+`components/reactbits/`. They are NOT installed with the shadcn CLI:
+`shadcn@latest` is v3.x and targets Tailwind v4, while this repo is
+Tailwind v3 with a v2-era `components.json`, so the CLI may try to
+rewrite `tailwind.config.ts`/`globals.css`. Instead the registry JSON
+is fetched directly (`https://reactbits.dev/r/{Name}-TS-TW.json`) and
+`files[0].content` is written out by hand. Two things must be done to
+every file pulled that way:
+
+1. **Prepend `"use client";`** — reactbits ships without it, and the
+   first Server Component that imports one fails with "useRef only
+   works in a Client Component". `components/TextType.tsx` (vendored
+   earlier, by hand) has the same fix.
+2. Check for hardcoded dark-only colors. `SpotlightCard` shipped with
+   `border-neutral-800 bg-neutral-900`; it was edited to use
+   `border-border bg-card` so it follows the theme.
+
+Not installed, on purpose: `Beams`/`Silk` (need
+`@react-three/fiber@^9`, which requires React 19 — this repo is 18.3),
+`PillNav` (`react-router-dom`), `CardNav`/`Carousel` (`react-icons`,
+duplicating lucide), `ScrollStack` (`lenis` hijacks global scroll),
+`StarBorder` (hardcoded black gradient + needs extra keyframes),
+`TiltedCard` (raw `<img>`, bypassing `next/image` and the
+`remotePatterns` whitelist in `next.config.mjs`).
+
+`AnimatedContent`/`FadeContent` start at `opacity: 0` and reveal via
+gsap ScrollTrigger. That means anything below the fold stays invisible
+until scrolled to — correct behavior, but it makes a freshly created
+shelf look like a failed click, so `EstanteView` scrolls the new shelf
+into view after creating it. Keep that in mind before wrapping
+above-the-fold or dynamically-added content in either of them.
+
+Theme is `next-themes` with `attribute="class"`, provided by
+`components/providers.tsx` (which also holds `SessionProvider`) so
+`app/layout.tsx` stays a server component. `<html>` needs
+`suppressHydrationWarning`. Notes on the token system in
+`app/globals.css`:
+
+- The old unlayered `body { @apply bg-gradient-to-b from-brand-50 ... }`
+  was removed. Unlayered CSS always beats `@layer base`, so it was
+  overriding `bg-background` and pinning the page light. The gradient is
+  now `--page-from`/`--page-to` vars inside `@layer base`.
+- Tailwind colors here are bare `var(--x)` with no `<alpha-value>`
+  placeholder, so **opacity modifiers silently do nothing**
+  (`bg-card/70` renders fully opaque). Translucent surfaces use a
+  dedicated var carrying its own alpha — see `--surface-translucent`,
+  used by the header's frosted-glass effect.
+- `--wood-top`/`--wood-face`/`--wood-edge`/`--shelf-back` drive the
+  bookshelf furniture, which is hand-built CSS (`ShelfPlank`,
+  `Bookcase`) — reactbits has no bookshelf.
+- Third-party brand colors (Amazon `#131921`, Mercado Livre `#FFE600`)
+  are left alone; Amazon's near-black just gets `dark:ring-1` so it
+  doesn't vanish against the dark page.
+
+Book spines derive color, width and height from a **hash of the item
+id** (`lib/spine.ts`), never `Math.random()` — spines are
+server-rendered real content, so a random value would break hydration.
+Spine titles use `writing-mode: vertical-rl`, which screen readers
+handle unreliably, so each spine is a real `<button>` with an
+`aria-label` in normal reading order.
+
+Movement between shelves animates via motion's `layoutId` on
+`BookSpine` (shared across both `AnimatePresence` lists, so a move is
+one continuous element). On the home page the destination shelf isn't
+on screen, so `FlyToShelf` portals a cover that flies to the "Minha
+estante" header link instead. Everything gates on `useReducedMotion()`.
 
 ## Opensquad (marketing/content side-tooling)
 

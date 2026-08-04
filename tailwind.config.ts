@@ -19,7 +19,8 @@ const config: Config = {
   				'600': '#7c3aed',
   				'700': '#6d28d9',
   				'800': '#5b21b6',
-  				'900': '#4c1d95'
+  				'900': '#4c1d95',
+  				'950': '#2e1065'
   			},
   			background: 'var(--background)',
   			foreground: 'var(--foreground)',
@@ -47,7 +48,10 @@ const config: Config = {
   				DEFAULT: 'var(--accent)',
   				foreground: 'var(--accent-foreground)'
   			},
-  			destructive: 'var(--destructive)',
+  			destructive: {
+  				DEFAULT: 'var(--destructive)',
+  				foreground: 'var(--destructive-foreground)'
+  			},
   			border: 'var(--border)',
   			input: 'var(--input)',
   			ring: 'var(--ring)',

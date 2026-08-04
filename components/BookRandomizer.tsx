@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import ClickSpark from "@/components/reactbits/ClickSpark";
 import type { BookDTO, CategoryDTO } from "@/types/book";
 
 interface BookRandomizerProps {
@@ -112,21 +113,28 @@ export default function BookRandomizer({ categories }: BookRandomizerProps) {
           </Select>
         </div>
 
-        <motion.div whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
-          <Button
-            type="button"
-            onClick={sortear}
-            disabled={loading}
-            size="lg"
-            className="w-full bg-brand-600 text-white hover:bg-brand-700"
-          >
-            {loading ? "Sorteando..." : books.length > 0 ? "Sortear de novo" : "🎲 Sortear livro"}
-          </Button>
-        </motion.div>
+        <ClickSpark
+          sparkColor={reduceMotion ? "transparent" : "#a78bfa"}
+          sparkCount={10}
+          sparkRadius={22}
+          duration={450}
+        >
+          <motion.div whileTap={reduceMotion ? undefined : { scale: 0.98 }}>
+            <Button
+              type="button"
+              onClick={sortear}
+              disabled={loading}
+              size="lg"
+              className="w-full bg-brand-600 text-white hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 dark:text-brand-950"
+            >
+              {loading ? "Sorteando..." : books.length > 0 ? "Sortear de novo" : "🎲 Sortear livro"}
+            </Button>
+          </motion.div>
+        </ClickSpark>
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2 max-w-md text-center">
+        <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-2 max-w-md text-center">
           {error}
         </p>
       )}

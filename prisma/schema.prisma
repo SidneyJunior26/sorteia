@@ -45,6 +45,10 @@ model Book {
   createdAt      DateTime @default(now())
 
   affiliateLinks AffiliateLink[]
+  // Back-relation only — the foreign key lives on ShelfItem, so this
+  // adds no column to the Book table and leaves the `SELECT *` in
+  // app/api/random-book/route.ts untouched.
+  shelfItems     ShelfItem[]
 
   @@index([category])
   @@index([language])
@@ -76,4 +80,145 @@ model AffiliateLink {
 
   @@unique([bookId, store])
   @@index([bookId])
+}
+
+// ------------------------------------------------------------------
+// Accounts (NextAuth / Auth.js v5 + @auth/prisma-adapter).
+//
+// Session strategy is JWT (forced by the Credentials provider), so the
+// Session and VerificationToken tables are never written to today —
+// they exist because the adapter's TypeScript contract requires
+// prisma.session.* / prisma.verificationToken.* to be callable.
+// ------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+
+  /// Null for users who only ever signed in with Google.
+  passwordHash String?
+
+  /// Editable heading shown above the bookshelf. Null means "not
+  /// customized" — the UI derives "Estante do {first name}" instead, so
+  /// it keeps following `name` until the user overrides it explicitly.
+  libraryTitle String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  shelves    Shelf[]
+  shelfItems ShelfItem[]
+}
+
+/// The snake_case column names here are not a style slip — the adapter
+/// writes these exact keys. Renaming them breaks OAuth sign-in.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ------------------------------------------------------------------
+// Bookshelf ("estante").
+// ------------------------------------------------------------------
+
+/// UNREAD and READ are the two shelves every user gets automatically.
+/// `kind` — not the display name — is the stable identity: a user who
+/// renames "Não lidos" to "Fila" must not get a duplicate recreated.
+enum ShelfKind {
+  UNREAD
+  READ
+  CUSTOM
+}
+
+model Shelf {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  kind      ShelfKind @default(CUSTOM)
+  position  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items ShelfItem[]
+
+  @@unique([userId, name])
+  @@index([userId, position])
+}
+
+/// A book on a user's shelf.
+///
+/// `bookId` is nullable with onDelete: SetNull, and the title/author/
+/// cover are duplicated as a snapshot on purpose. Nothing deletes Book
+/// rows today (lib/sync.ts only upserts), but if a future cleanup ever
+/// did, the user's shelf degrades to a spine that still renders instead
+/// of silently losing books. `googleBooksId` lets a re-link job re-point
+/// orphaned items at a re-synced Book.
+///
+/// @@unique([userId, bookId]) is what enforces "a book lives on exactly
+/// one shelf" — moving it between shelves is an update of `shelfId`, not
+/// a delete + insert.
+model ShelfItem {
+  id      String  @id @default(cuid())
+  userId  String
+  shelfId String
+  bookId  String?
+
+  googleBooksId String?
+  title         String
+  author        String
+  coverUrl      String?
+  isbn          String?
+  category      String?
+
+  addedAt  DateTime @default(now())
+  position Int      @default(0)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shelf Shelf @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  book  Book? @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, bookId])
+  @@index([shelfId, position])
+  @@index([userId])
+  @@index([googleBooksId])
 }
