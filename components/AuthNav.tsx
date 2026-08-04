@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { LibraryBig, LogOut, User as UserIcon } from "lucide-react";
+import { LibraryBig, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,6 +61,12 @@ export default function AuthNav() {
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild className="gap-2">
+            <Link href="/conta">
+              <Settings className="size-4" />
+              Minha conta
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => signOut({ callbackUrl: "/" })}
             className="gap-2"

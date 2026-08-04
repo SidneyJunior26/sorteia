@@ -60,6 +60,11 @@ export default function RootLayout({
                 Feito com Next.js. Os links de compra podem ter código de
                 afiliado — isso não muda o preço que você paga.
               </p>
+              <p className="mt-1">
+                <Link href="/privacidade" className="underline hover:text-foreground">
+                  Política de Privacidade
+                </Link>
+              </p>
             </footer>
           </div>
         </Providers>

@@ -107,20 +107,37 @@ export default function BookDetailPanel({
                   orphaned snapshot has no id to build the affiliate
                   redirect from. */}
               {item.bookId && (
-                <Button
-                  asChild
-                  size="sm"
-                  className="h-8 gap-1.5 bg-[#131921] px-3 text-white hover:bg-[#232f3e] dark:ring-1 dark:ring-white/20"
-                >
-                  <a
-                    href={`/go/${item.bookId}/AMAZON`}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
+                <>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="h-8 gap-1.5 bg-[#131921] px-3 text-white hover:bg-[#232f3e] dark:ring-1 dark:ring-white/20"
                   >
-                    <ShoppingCart className="size-3.5 shrink-0 text-[#ff9900]" />
-                    Amazon
-                  </a>
-                </Button>
+                    <a
+                      href={`/go/${item.bookId}/AMAZON`}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                    >
+                      <ShoppingCart className="size-3.5 shrink-0 text-[#ff9900]" />
+                      Amazon
+                    </a>
+                  </Button>
+
+                  <Button
+                    asChild
+                    size="sm"
+                    className="h-8 gap-1.5 bg-[#FFE600] px-3 text-[#3483FA] hover:bg-[#f7dc00]"
+                  >
+                    <a
+                      href={`/go/${item.bookId}/MERCADO_LIVRE`}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                    >
+                      <ShoppingCart className="size-3.5 shrink-0" />
+                      Mercado Livre
+                    </a>
+                  </Button>
+                </>
               )}
 
               <Button

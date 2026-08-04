@@ -70,11 +70,19 @@ export default function BookSpine({
         aria-hidden="true"
       >
         <span
-          className="text-[10px] font-semibold leading-tight tracking-tight line-clamp-1"
+          className="text-[10px] font-semibold leading-tight tracking-tight"
           style={{
             writingMode: "vertical-rl",
             textOrientation: "mixed",
             maxHeight: "100%",
+            // `line-clamp`/`-webkit-line-clamp` forces `display: -webkit-box`
+            // with `-webkit-box-orient: vertical`, which fights
+            // writing-mode and made some browsers fall back to laying the
+            // title out horizontally. `text-overflow: ellipsis` respects
+            // writing-mode's own block/inline axes instead.
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {item.title}

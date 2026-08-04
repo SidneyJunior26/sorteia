@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import GoogleButton from "./GoogleButton";
+import PasswordInput from "./PasswordInput";
 
 interface LoginFormProps {
   hasGoogle: boolean;
@@ -27,13 +28,25 @@ export default function LoginForm({ hasGoogle, next }: LoginFormProps) {
 
     // redirect:false so the error renders inline instead of bouncing
     // through ?error= — same inline-error pattern as BookRandomizer.
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    //
+    // The try/catch is load-bearing: if the callback route 500s (a
+    // missing AUTH_SECRET in the deploy, say), signIn's internal
+    // res.json() throws on the HTML error page and the rejection would
+    // escape unhandled — the form would just sit there with no message.
+    let result;
+    try {
+      result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+    } catch {
+      setError("Falha ao falar com o servidor de login. Tente de novo.");
+      setLoading(false);
+      return;
+    }
 
-    if (result?.error) {
+    if (!result || result.error || result.ok === false) {
       setError("E-mail ou senha incorretos.");
       setLoading(false);
       return;
@@ -71,9 +84,8 @@ export default function LoginForm({ hasGoogle, next }: LoginFormProps) {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">Senha</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}
