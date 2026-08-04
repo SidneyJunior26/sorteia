@@ -55,16 +55,16 @@ export default function RootLayout({
 
             <main className="flex-1">{children}</main>
 
-            <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-              <p>
-                Feito com Next.js. Os links de compra podem ter código de
-                afiliado — isso não muda o preço que você paga.
-              </p>
-              <p className="mt-1">
+            <footer className="border-t border-border py-6 text-sm text-muted-foreground">
+              <div className="mx-auto flex max-w-3xl flex-col items-center gap-2 px-4 sm:flex-row sm:justify-between">
+                <p>
+                  © {new Date().getFullYear()} Achei Meu Livro. Desenvolvido
+                  por Sidney Junior.
+                </p>
                 <Link href="/privacidade" className="underline hover:text-foreground">
                   Política de Privacidade
                 </Link>
-              </p>
+              </div>
             </footer>
           </div>
         </Providers>

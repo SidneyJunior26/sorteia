@@ -3,8 +3,16 @@ import { z } from "zod";
 import { Store } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildAffiliateUrl } from "@/lib/affiliate";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+// Public, unauthenticated, and writes to the click counter on every
+// call — high enough that a real reader clicking through several books
+// never notices, low enough to blunt a script hammering it to skew
+// AffiliateLink stats.
+const CLICK_LIMIT = 60;
+const CLICK_WINDOW_SECONDS = 60;
 
 const paramsSchema = z.object({
   bookId: z.string().trim().cuid(),
@@ -31,7 +39,19 @@ interface RouteParams {
  * per book — everything is assembled at click time from the book's
  * title/author and each store's template (see lib/affiliate.ts).
  */
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  const ip = getClientIp(request);
+  const limit = await rateLimit(`go:${ip}`, CLICK_LIMIT, CLICK_WINDOW_SECONDS);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Muitas requisições. Tente de novo em instantes." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) },
+      }
+    );
+  }
+
   const parsed = paramsSchema.safeParse(params);
 
   if (!parsed.success) {

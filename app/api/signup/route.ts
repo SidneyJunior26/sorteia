@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultShelves } from "@/lib/shelves";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 // Deliberately outside /api/auth/* so it can never collide with the
 // [...nextauth] catch-all.
@@ -25,7 +26,25 @@ const bodySchema = z.object({
 // serverless instance — long enough that signup feels broken.
 const BCRYPT_COST = 10;
 
+// Generous enough for a person retrying a typo, tight enough to stop a
+// script from mass-creating accounts (and hammering bcrypt in the
+// process — cost-10 hashing isn't free CPU).
+const SIGNUP_LIMIT = 6;
+const SIGNUP_WINDOW_SECONDS = 15 * 60;
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const limit = await rateLimit(`signup:${ip}`, SIGNUP_LIMIT, SIGNUP_WINDOW_SECONDS);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Tente de novo em alguns minutos." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) },
+      }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();

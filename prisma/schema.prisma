@@ -21,6 +21,21 @@ enum Store {
   MERCADO_LIVRE
 }
 
+/// Fixed-window rate-limit counters (see lib/rate-limit.ts). Backed by
+/// Postgres rather than an in-memory Map because serverless functions
+/// don't share memory across invocations/regions — a Map would reset
+/// on every cold start and never actually block anything across
+/// concurrent requests. `windowStart` is the bucket boundary (now
+/// rounded down to the window size), so a fresh row per bucket is what
+/// makes the counter reset over time without an explicit expiry job.
+model RateLimitEntry {
+  key         String
+  windowStart DateTime
+  count       Int      @default(1)
+
+  @@id([key, windowStart])
+}
+
 /// Book index, populated either by the Google Books sync cron job
 /// (source="google_books") or by the one-off curated-popular-authors
 /// script (source="curated", see prisma/curate.ts). `category` is
