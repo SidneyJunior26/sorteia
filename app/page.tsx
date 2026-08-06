@@ -68,8 +68,8 @@ export default async function HomePage() {
           <p className="text-sm text-muted-foreground">
             Escolher entre milhares de livros trava mais do que ajuda — é o
             próprio motivo de você não saber o que ler. Aqui você sorteia um
-            livro real, do catálogo sincronizado com a Amazon, com sinopse e
-            onde comprar na hora. Sem pesquisa, sem decisão, sem demora.
+            livro real, com sinopse e onde comprar na hora. Sem pesquisa,
+            sem decisão, sem demora.
           </p>
         </section>
       </AnimatedContent>
